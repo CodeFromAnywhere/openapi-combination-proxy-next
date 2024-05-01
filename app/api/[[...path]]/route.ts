@@ -2,7 +2,7 @@ import { OpenAPIDocument } from "actionschema/types";
 import { makeProxyOpenapi } from "../makeProxyOpenapi";
 import { operations } from "../../openapi-types";
 import untypedOpenapi from "../../../public/api/openapi.json";
-import { resolveOpenapiAppRequest } from "@/openapi-util/resolveOpenapiAppRequest";
+import { OpenapiDocument, resolveOpenapiAppRequest } from "openapi-util";
 
 const openapi = untypedOpenapi as unknown as OpenAPIDocument;
 
@@ -18,7 +18,8 @@ export type Endpoint<T extends keyof operations> = (
 /** function creator to DRY */
 const getHandler = (method: string) => (request: Request) =>
   resolveOpenapiAppRequest(request, method, {
-    openapi,
+    // TODO: this typing really needs to be improved
+    openapi: openapi as unknown as OpenapiDocument,
     // Define your functions here
     functions: { makeProxyOpenapi },
   });

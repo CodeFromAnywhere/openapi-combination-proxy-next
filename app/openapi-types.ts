@@ -1,4 +1,21 @@
 export interface paths {
+    "/mergePartialApis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Merges partial apis without storing the resulting openapi. */
+        post: operations["mergePartialApis"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/makeProxyOpenapi": {
         parameters: {
             query?: never;
@@ -151,13 +168,100 @@ export interface components {
         /** @description ☢️ Allows easy creation new OpenAPIs that have a selection of paths from multiple OpenAPIs, and proxy the incoming requests to the right path of another server with authentication. */
         "openapi-proxy.schema": {
             /** @description Name of the proxy */
-            name?: string;
+            name: string;
             /** @description List of multiple paths from multiple openapis */
-            partialApis?: components["schemas"]["PartialApi"][];
+            partialApis: components["schemas"]["PartialApi"][];
             /** @description Info object of the to be served openapi */
             info: components["schemas"]["Info"];
             /** @description Secret API that - if given - must be met to gain access. */
             apiKey?: string;
+        };
+        ExternalDocumentation: {
+            description?: string;
+            /** Format: uri-reference */
+            url: string;
+            /** @description Scraped markdown from the url */
+            markdown?: unknown;
+        };
+        ServerVariable: {
+            enum?: string[];
+            default: string;
+            description?: string;
+        };
+        Server: {
+            url: string;
+            description?: string;
+            variables?: {
+                [key: string]: components["schemas"]["ServerVariable"] | undefined;
+            };
+        };
+        Tag: {
+            name: string;
+            description?: string;
+            externalDocs?: components["schemas"]["ExternalDocumentation"];
+            /** @description Tag-based ratelimit info. */
+            "x-rateLimit"?: components["schemas"]["RateLimit"];
+        };
+        Paths: Record<string, never>;
+        Components: {
+            schemas?: Record<string, never>;
+            responses?: Record<string, never>;
+            parameters?: Record<string, never>;
+            examples?: Record<string, never>;
+            requestBodies?: Record<string, never>;
+            headers?: Record<string, never>;
+            securitySchemes?: Record<string, never>;
+            links?: Record<string, never>;
+            callbacks?: Record<string, never>;
+        };
+        /**
+         * OpenAPI Document
+         * @description The description of OpenAPI v3.0.x documents, as defined by https://spec.openapis.org/oas/v3.0.3 and extended by ActionSchema.
+         */
+        "openapi.schema": {
+            /** Format: uri-reference */
+            $schema: string;
+            /** Format: uri-reference */
+            $id?: string;
+            /**
+             * Format: uri-reference
+             * @description If given, should be a url linking to the original file, the starting point, if this is not already the one. Used to determine if anything has changed.
+             */
+            $source?: string;
+            /** @description Version */
+            openapi: string;
+            /**
+             * @description Version of actionschema.
+             * @default 0.0.1
+             */
+            "x-actionschema": string;
+            /** @description Provides metadata about the API. The metadata MAY be used by tooling as required. */
+            info: components["schemas"]["Info"];
+            /** @description Additional external documentation. */
+            externalDocs?: components["schemas"]["ExternalDocumentation"];
+            /** @description An array of Server Objects, which provide connectivity information to a target server. If the servers property is not provided, or is an empty array, the default value would be a Server Object with a url value of /. */
+            servers?: components["schemas"]["Server"][];
+            /** @description An array of Server Objects, indicating the original servers. Useful when defining a proxy. */
+            "x-origin-servers"?: components["schemas"]["Server"][];
+            /**
+             * @description A declaration of which security mechanisms can be used across the API. The list of values includes alternative security requirement objects that can be used. Only one of the security requirement objects need to be satisfied to authorize a request. Individual operations can override this definition. To make security optional, an empty security requirement ({}) can be included in the array.
+             *
+             *     Please note: Every item in this array is an object with keys being the scheme names (can be anything). These names should then also be defined in components.securitySchemes.
+             * @default [
+             *       {
+             *         "apiKey": []
+             *       }
+             *     ]
+             */
+            security: components["schemas"]["SecurityRequirement"][];
+            /** @description Used for grouping endpoints together.
+             *
+             *     A list of tags used by the specification with additional metadata. The order of the tags can be used to reflect on their order by the parsing tools. Not all tags that are used by the Operation Object must be declared. The tags that are not declared MAY be organized randomly or based on the tools' logic. Each tag name in the list MUST be unique. */
+            tags?: components["schemas"]["Tag"][];
+            /** @description The available paths and operations for the API. */
+            paths: components["schemas"]["Paths"];
+            /** @description An element to hold various schemas for the specification. */
+            components?: components["schemas"]["Components"];
         };
     };
     responses: never;
@@ -168,6 +272,32 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    mergePartialApis: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    proxy: components["schemas"]["openapi-proxy.schema"];
+                };
+            };
+        };
+        responses: {
+            /** @description OpenAPI */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["openapi.schema"];
+                };
+            };
+        };
+    };
     makeProxyOpenapi: {
         parameters: {
             query?: never;
@@ -179,6 +309,7 @@ export interface operations {
             content: {
                 "application/json": {
                     proxy: components["schemas"]["openapi-proxy.schema"];
+                    openapi: components["schemas"]["openapi.schema"];
                 };
             };
         };
@@ -200,6 +331,10 @@ export interface operations {
 export type StandardResponse = components["schemas"]["StandardResponse"]
   
 export const operationUrlObject = {
+  "mergePartialApis": {
+    "method": "post",
+    "path": "/mergePartialApis"
+  },
   "makeProxyOpenapi": {
     "method": "post",
     "path": "/makeProxyOpenapi"

@@ -13,6 +13,40 @@
     }
   ],
   "paths": {
+    "/mergePartialApis": {
+      "post": {
+        "summary": "Merges partial apis without storing the resulting openapi.",
+        "operationId": "mergePartialApis",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "proxy": {
+                    "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi-proxy.schema.json#"
+                  }
+                },
+                "required": ["proxy"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json#"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/makeProxyOpenapi": {
       "post": {
         "summary": "Makes an openapi from an OpenAPI Proxy specification.",
@@ -26,9 +60,12 @@
                 "properties": {
                   "proxy": {
                     "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi-proxy.schema.json#"
+                  },
+                  "openapi": {
+                    "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json#"
                   }
                 },
-                "required": ["proxy"]
+                "required": ["proxy", "openapi"]
               }
             }
           }

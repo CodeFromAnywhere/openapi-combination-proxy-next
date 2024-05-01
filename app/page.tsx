@@ -1,5 +1,7 @@
 "use client";
-
+import { Info } from "actionschema/types";
+import { Suspense, useState } from "react";
+import { client } from "./client";
 import { makeArray } from "from-anywhere";
 import { makeComplexUrlStore } from "./makeComplexUrlStore";
 
@@ -9,6 +11,12 @@ const HomePage = () => {
   }>();
   const [url, setUrl] = useStore("url");
   const urls = makeArray(url);
+  const [info, setInfo] = useState<Info>({
+    title: "My API",
+    version: "3.0.0",
+    description: "Some combination of multiple api docs",
+  });
+
   return (
     <div className="h-full p-4">
       <h1 className="text-3xl">OpenAPI Combination Proxy</h1>
@@ -66,8 +74,23 @@ const HomePage = () => {
           Create
         </button>
         <div
-          onClick={() => {
-            alert("json coming");
+          onClick={async () => {
+            const openapi = await client("mergePartialApis", {
+              proxy: {
+                info,
+                name: "Test",
+                partialApis: urls.map((x) => ({ openapiUrl: x })),
+                apiKey: undefined,
+              },
+            });
+
+            console.log({ openapi });
+            const string = JSON.stringify(openapi, undefined, 2);
+
+            console.log(`string:`, string?.length);
+            navigator.clipboard.writeText(string);
+
+            alert("Copied to clipboard");
           }}
           className="cursor-pointer border border-black p-2 rounded-sm"
         >
@@ -77,7 +100,6 @@ const HomePage = () => {
     </div>
   );
 };
-import { Suspense } from "react";
 
 export default function SuspensedHomepage() {
   // Needed for https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
